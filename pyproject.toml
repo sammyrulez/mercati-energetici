@@ -1,23 +1,26 @@
-[tool.poetry]
+[project]
 name = "mercati-energetici"
-version = "v0.1.0"
+version = "0.1.0"
 description = "Async python client for the Italian energy markets API."
-authors = ["Davide Marcato"]
+authors = [{name = "Davide Marcato"}]
 readme = "README.md"
-packages = [{include = "mercati_energetici"}]
+requires-python = ">=3.10"
+dependencies = [
+    "yarl>=1.8.2",
+    "aiohttp>=3.8.4",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-yarl = "^1.8.2"
-aiohttp = "^3.8.4"
-
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
-pytest-asyncio = "^0.21.0"
-mkdocs-material = "^9.1.4"
-mkdocstrings = {extras = ["python"], version = "^0.20.0"}
+[project.optional-dependencies]
+dev = [
+    "black>=23.1.0",
+    "pytest-asyncio>=0.21.0",
+    "mkdocs-material>=9.1.4",
+    "mkdocstrings[python]>=0.20.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mercati_energetici"]
