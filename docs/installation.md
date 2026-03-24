@@ -1,13 +1,17 @@
 # Installation
 
-The library is available on pip:
+The library is available on PyPI:
 
 ```bash
 pip install mercati-energetici
 ```
 
-Or if you use poetry:
+Or with uv:
 
 ```bash
-poetry add mercati-energetici
+uv add mercati-energetici
 ```
+
+## Credentials
+
+All classes require valid GME credentials. You can register at [api.mercatoelettrico.org](https://api.mercatoelettrico.org/users/RegistrationForm/RegistrationRequest) to obtain a username and password.

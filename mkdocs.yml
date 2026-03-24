@@ -2,7 +2,7 @@ site_name: mercati-energetici
 site_url: https://sammyrulez.github.io/mercati-energetici/
 site_author: Davide Marcato, Sam Reghenzi
 site_description: Documentation for mercati-energetici python package
-repo_name: darcato/mercati-energetici
+repo_name: sammyrulez/mercati-energetici
 repo_url: https://github.com/sammyrulez/mercati-energetici
 
 theme:
@@ -30,9 +30,9 @@ nav:
   - Installation: 'installation.md'
   - Getting Started: 'getting_started.md'
   - API Reference:
+    - AuthenticatedMercatiEnergetici: 'reference/mercati_energetici.md'
     - MGP: 'reference/mgp.md'
     - MercatiElettrici: 'reference/mercati_elettrici.md'
     - MercatiGas: 'reference/mercati_gas.md'
     - MercatiAmbientali: 'reference/mercati_ambientali.md'
-    - MercatiEnergetici: 'reference/mercati_energetici.md'
   - License: 'LICENSE.md'

@@ -1,4 +1,4 @@
-::: mercati_energetici.energy_markets.MercatiEnergetici
+::: mercati_energetici.authenticated_markets.AuthenticatedMercatiEnergetici
     options:
         filters:
           - "!^_"
