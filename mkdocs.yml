@@ -7,6 +7,12 @@ repo_url: https://github.com/sammyrulez/mercati-energetici
 
 theme:
   name: material
+  logo: logo.svg
+  palette:
+    primary: custom
+extra_css:
+  - stylesheets/extra.css
+
 plugins:
   - search
   - mkdocstrings:

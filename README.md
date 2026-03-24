@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.svg" width="80" height="80" alt="mercati-energetici logo">
+</p>
+
 # mercati-energetici
 
 ## Async python library for Italian energy markets
