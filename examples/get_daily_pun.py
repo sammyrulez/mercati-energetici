@@ -1,12 +1,16 @@
 """How to get the average price of electricity in Italy (PUN) for a specific date."""
 import asyncio
-from mercati_energetici import MGP
+import os
 from datetime import date
+
+from mercati_energetici import MGP
+
+USERNAME = os.environ["GME_USERNAME"]
+PASSWORD = os.environ["GME_PASSWORD"]
 
 
 async def main() -> None:
-    """Show example on how to use the library."""
-    async with MGP() as mgp:
+    async with MGP(USERNAME, PASSWORD) as mgp:
         print("PUN avg: ", await mgp.daily_pun(date(2023, 3, 28)))
 
 
