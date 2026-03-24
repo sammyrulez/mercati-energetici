@@ -127,7 +127,7 @@ class MGP(MercatiElettrici):
         """
         data = await super().get_volumes("MGP", day)
         bought = {record["zona"]: {} for record in data if "zona" in record}
-        sold = bought.copy()
+        sold = {zone: {} for zone in bought}
         for record in data:
             bought[record["zona"]][record["ora"] - 1] = record["acquisti"]
             sold[record["zona"]][record["ora"] - 1] = record["vendite"]

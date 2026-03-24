@@ -15,9 +15,14 @@ dependencies = [
 dev = [
     "black>=23.1.0",
     "pytest-asyncio>=0.21.0",
+    "aioresponses>=0.7.6",
     "mkdocs-material>=9.1.4",
     "mkdocstrings[python]>=0.20.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["tests"]
 
 [build-system]
 requires = ["hatchling"]

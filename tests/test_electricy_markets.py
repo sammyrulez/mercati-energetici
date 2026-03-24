@@ -1,113 +1,190 @@
-"""Test the electricity markets module."""
-import os
-import pytest, pytest_asyncio
+"""Tests for MercatiElettrici and MGP."""
 from datetime import date
-from mercati_energetici import MercatiElettrici, MGP
+
+import pytest
+from aioresponses import aioresponses
+
+from mercati_energetici import MGP, MercatiElettrici
 from mercati_energetici.exceptions import (
-    MercatiEnergeticiZoneError,
     MercatiEnergeticiRequestError,
+    MercatiEnergeticiZoneError,
+)
+from conftest import (
+    AUTH_OK,
+    AUTH_URL,
+    REQUEST_URL,
+    api_response,
+    error_response,
+    make_liquidity_data,
+    make_prices_data,
+    make_volumes_data,
 )
 
-USERNAME = os.environ.get("GME_USERNAME", "")
-PASSWORD = os.environ.get("GME_PASSWORD", "")
 
-
-@pytest_asyncio.fixture
-async def mercati_elettrici():
-    async with MercatiElettrici(USERNAME, PASSWORD) as me:
-        yield me
-
-@pytest_asyncio.fixture
-async def mgp():
-    async with MGP(USERNAME, PASSWORD) as mgp:
-        yield mgp
-
-
-@pytest.mark.asyncio
 class TestMercatiElettrici:
-    async def test_prices(self, mercati_elettrici):
-        prices = await mercati_elettrici.get_prices("MGP")
-        assert prices is not None
-        assert type(prices) is list
-        assert len(prices) > 0
-        for price in prices:
-            assert type(price) is dict
-            assert price["mercato"] == "MGP"
-        data = await mercati_elettrici.get_prices("MGP", date(2023, 3, 2))
-        assert data[0]["data"] == 20230302
-        data = await mercati_elettrici.get_prices("MGP", "20230303")
-        assert data[0]["data"] == 20230303
-        with pytest.raises(MercatiEnergeticiRequestError):
-            await mercati_elettrici.get_prices("NONEXISTENT")
+    async def test_get_prices(self):
+        data = make_prices_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MercatiElettrici("u", "p") as client:
+                result = await client.get_prices("MGP", "20230328")
+        assert isinstance(result, list)
+        assert len(result) == len(data)
+        assert result[0]["mercato"] == "MGP"
+        assert result[0]["data"] == 20230328
+        assert set(result[0].keys()) == {"data", "ora", "mercato", "zona", "prezzo"}
 
-    async def test_volumes(self, mercati_elettrici):
-        volumes = await mercati_elettrici.get_volumes("MGP")
-        assert volumes is not None
-        assert type(volumes) is list
-        assert len(volumes) > 0
-        for volume in volumes:
-            assert type(volume) is dict
-            assert volume["mercato"] == "MGP"
-        data = await mercati_elettrici.get_volumes("MGP", date(2023, 3, 2))
-        assert data[0]["data"] == 20230302
-        data = await mercati_elettrici.get_volumes("MGP", "20230303")
-        assert data[0]["data"] == 20230303
-        with pytest.raises(MercatiEnergeticiRequestError):
-            await mercati_elettrici.get_volumes("NONEXISTENT")
+    async def test_get_prices_request_error(self):
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=error_response())
+            async with MercatiElettrici("u", "p") as client:
+                with pytest.raises(MercatiEnergeticiRequestError):
+                    await client.get_prices("NONEXISTENT")
 
-    async def test_liquidity(self, mercati_elettrici):
-        liquidity = await mercati_elettrici.get_liquidity()
-        assert liquidity is not None
-        assert type(liquidity) is list
-        assert len(liquidity) >= 23 and len(liquidity) <= 25
-        for hour in liquidity:
-            assert type(hour) is dict
-        data = await mercati_elettrici.get_liquidity(date(2023, 3, 2))
-        assert data[0]["data"] == 20230302
-        data = await mercati_elettrici.get_liquidity("20230303")
-        assert data[0]["data"] == 20230303
+    async def test_get_volumes(self):
+        data = make_volumes_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MercatiElettrici("u", "p") as client:
+                result = await client.get_volumes("MGP", "20230328")
+        assert isinstance(result, list)
+        assert result[0]["mercato"] == "MGP"
+        assert set(result[0].keys()) == {"data", "ora", "mercato", "zona", "acquisti", "vendite"}
+
+    async def test_get_volumes_request_error(self):
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=error_response())
+            async with MercatiElettrici("u", "p") as client:
+                with pytest.raises(MercatiEnergeticiRequestError):
+                    await client.get_volumes("NONEXISTENT")
+
+    async def test_get_liquidity(self):
+        data = make_liquidity_data()
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MercatiElettrici("u", "p") as client:
+                result = await client.get_liquidity("20230328")
+        assert isinstance(result, list)
+        assert len(result) == 24
+        assert set(result[0].keys()) == {"data", "ora", "liquidita"}
+
+    async def test_get_liquidity_default_date(self):
+        data = make_liquidity_data(date_val=int(date.today().strftime("%Y%m%d")))
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MercatiElettrici("u", "p") as client:
+                result = await client.get_liquidity()
+        assert result[0]["data"] == int(date.today().strftime("%Y%m%d"))
 
 
-@pytest.mark.asyncio
 class TestMGP:
-    async def test_prices(self, mgp):
-        prices = await mgp.get_prices()
-        assert prices is not None
-        assert type(prices) is dict
-        keys = set(prices.keys())
-        assert (
-            keys == set(range(24)) or keys == set(range(23)) or keys == set(range(25))
-        )
-        with pytest.raises(MercatiEnergeticiRequestError):
-            await mgp.get_prices(date(2020, 1, 1))
-        with pytest.raises(MercatiEnergeticiZoneError):
-            await mgp.get_prices(zone="NONEXISTENT")
+    async def test_get_prices_pun(self):
+        data = make_prices_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                prices = await mgp.get_prices()
+        assert isinstance(prices, dict)
+        assert set(prices.keys()) == set(range(24))
+        # hour 0 = ora 1 → prezzo 101.0
+        assert prices[0] == pytest.approx(101.0)
 
-    async def test_volumes(self, mgp):
-        volumes = await mgp.get_volumes()
-        assert volumes is not None
-        assert type(volumes) is tuple
-        assert len(volumes) == 2
-        bought, sold = volumes
-        assert type(bought) is dict
-        assert type(sold) is dict
-        keys = set(bought.keys())
-        assert (
-            keys == set(range(24)) or keys == set(range(23)) or keys == set(range(25))
-        )
-        assert keys == set(sold.keys())
-        with pytest.raises(MercatiEnergeticiRequestError):
-            await mgp.get_volumes(date(2020, 1, 1))
-        with pytest.raises(MercatiEnergeticiZoneError):
-            await mgp.get_volumes(zone="NONEXISTENT")
+    async def test_get_prices_zone(self):
+        data = make_prices_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                prices = await mgp.get_prices(zone="SUD")
+        assert set(prices.keys()) == set(range(24))
 
-    async def test_liquidity(self, mgp):
-        liquidity = await mgp.get_liquidity()
-        assert liquidity is not None
-        assert type(liquidity) is dict
-        keys = set(liquidity.keys())
-        assert (
-            keys == set(range(24)) or keys == set(range(23)) or keys == set(range(25))
-        )
-        with pytest.raises(MercatiEnergeticiRequestError):
-            await mgp.get_liquidity(date(2020, 1, 1))
+    async def test_get_prices_zone_error(self):
+        data = make_prices_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                with pytest.raises(MercatiEnergeticiZoneError):
+                    await mgp.get_prices(zone="NONEXISTENT")
+
+    async def test_get_prices_request_error(self):
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=error_response())
+            async with MGP("u", "p") as mgp:
+                with pytest.raises(MercatiEnergeticiRequestError):
+                    await mgp.get_prices(date(2020, 1, 1))
+
+    async def test_daily_pun(self):
+        data = make_prices_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                pun = await mgp.daily_pun("20230328")
+        # PUN values are 101.0..124.0, average = 112.5
+        assert pun == pytest.approx(112.5)
+
+    async def test_get_volumes(self):
+        data = make_volumes_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                bought, sold = await mgp.get_volumes()
+        assert set(bought.keys()) == set(range(24))
+        assert set(sold.keys()) == set(range(24))
+        assert bought[0] == pytest.approx(501.0)
+        assert sold[0] == pytest.approx(1001.0)
+
+    async def test_get_volumes_zone(self):
+        data = make_volumes_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                bought, sold = await mgp.get_volumes(zone="NORD")
+        assert set(bought.keys()) == set(range(24))
+
+    async def test_get_volumes_zone_error(self):
+        data = make_volumes_data("MGP")
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                with pytest.raises(MercatiEnergeticiZoneError):
+                    await mgp.get_volumes(zone="NONEXISTENT")
+
+    async def test_get_volumes_request_error(self):
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=error_response())
+            async with MGP("u", "p") as mgp:
+                with pytest.raises(MercatiEnergeticiRequestError):
+                    await mgp.get_volumes(date(2020, 1, 1))
+
+    async def test_get_liquidity(self):
+        data = make_liquidity_data()
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=api_response(data))
+            async with MGP("u", "p") as mgp:
+                liquidity = await mgp.get_liquidity("20230328")
+        assert isinstance(liquidity, dict)
+        assert set(liquidity.keys()) == set(range(24))
+        assert liquidity[0] == pytest.approx(74.47)
+
+    async def test_get_liquidity_request_error(self):
+        with aioresponses() as mock:
+            mock.post(AUTH_URL, payload=AUTH_OK)
+            mock.post(REQUEST_URL, payload=error_response())
+            async with MGP("u", "p") as mgp:
+                with pytest.raises(MercatiEnergeticiRequestError):
+                    await mgp.get_liquidity(date(2020, 1, 1))
