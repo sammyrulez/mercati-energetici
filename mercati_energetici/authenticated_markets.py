@@ -11,6 +11,7 @@ import io
 import json
 import zipfile
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Any
 
 from aiohttp import ClientSession
@@ -65,7 +66,7 @@ class AuthenticatedMercatiEnergetici:
         url = URL.build(scheme="https", host=_API_HOST, path=f"{_BASE_PATH}/Auth")
         response = await self.session.post(
             url,
-            json={"login": self.username, "password": self.password},
+            json={"Login": self.username, "Password": self.password},
             headers={"Content-Type": "application/json"},
         )
 
@@ -179,6 +180,26 @@ class AuthenticatedMercatiEnergetici:
 
         response.raise_for_status()
         return await response.json()
+
+    def _handle_date(self, day: date | str | None) -> str:
+        """Format a date to YYYYMMDD string.
+
+        Args:
+            day: A ``datetime.date`` object, a string in ``YYYYMMDD`` format,
+                 or ``None`` (defaults to today).
+
+        Returns:
+            A string in ``YYYYMMDD`` format.
+        """
+        if day is None:
+            day = date.today()
+        elif isinstance(day, str):
+            day = datetime.strptime(day, "%Y%m%d").date()
+        elif not isinstance(day, date):
+            raise TypeError(
+                "day must be a datetime.date or a string in the format YYYYMMDD"
+            )
+        return day.strftime("%Y%m%d")
 
     async def close(self) -> None:
         """Close the underlying client session."""

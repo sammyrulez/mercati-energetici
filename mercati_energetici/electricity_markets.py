@@ -2,99 +2,76 @@
 from __future__ import annotations
 from datetime import date
 
-from .energy_markets import MercatiEnergetici
+from .authenticated_markets import AuthenticatedMercatiEnergetici
 from .exceptions import MercatiEnergeticiZoneError
 
+_PLATFORM = "PublicMarketResults"
 
-class MercatiElettrici(MercatiEnergetici):
+
+class MercatiElettrici(AuthenticatedMercatiEnergetici):
     """
-    Electricity Markets low level API wrapper.
+    Electricity Markets API wrapper.
     See [the GME website](https://www.mercatoelettrico.org/En/Mercati/MercatoElettrico/IlMercatoElettrico.aspx)
     for an explanation of the markets.
     """
-
-    async def get_markets(self) -> dict:
-        """Get electricity markets.
-
-        Returns:
-            A list of Python dictionaries like: ``[{data: ...,
-                                                  mercato: ...,
-                                                  volumi: ...}]``
-        """
-
-        data = await self._request("/GetMercatiElettrici")
-        return data
 
     async def get_prices(self, market: str, day: date | str = None) -> list[dict]:
         """Get electricity prices in €/MWh for a specific day on all the market zones.
 
         Args:
-            market: The market to get prices from.
-            day: Get prices of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
+            market: The market segment, e.g. ``"MGP"``.
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A Python dictionary like: ``[{"data": 20230323,
-                                        "ora": 1,
-                                        "mercato": "MGP",
-                                        "zona": "CALA",
-                                        "prezzo": 128.69 },]``
+            A list of dictionaries like: ``[{"data": 20230323,
+                                            "ora": 1,
+                                            "mercato": "MGP",
+                                            "zona": "CALA",
+                                            "prezzo": 128.69}]``
         """
-
-        data = await self._request(
-            "/GetPrezziME/{date}/{market}".format(
-                date=self._handle_date(day), market=market
-            )
-        )
-        return data
+        date_str = self._handle_date(day)
+        return await self.request_data(_PLATFORM, market, "ME_ZonalPrices", date_str, date_str)
 
     async def get_volumes(self, market: str, day: date | str = None) -> list[dict]:
         """Get bought and sold volume for a specific day on all the market zones.
 
         Args:
-            market: The market to get volumes from.
-            day: Get volumes of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
+            market: The market segment, e.g. ``"MGP"``.
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A Python dictionary like: ``[{ "data": 20230323,
-                                         "ora": 1,
-                                         "mercato": "MGP",
-                                         "zona": "CALA",
-                                         "acquisti": 482.198,
-                                         "vendite": 1001.576 },]``
+            A list of dictionaries like: ``[{"data": 20230323,
+                                             "ora": 1,
+                                             "mercato": "MGP",
+                                             "zona": "CALA",
+                                             "acquisti": 482.198,
+                                             "vendite": 1001.576}]``
         """
+        date_str = self._handle_date(day)
+        return await self.request_data(_PLATFORM, market, "ME_ZonalVolumes", date_str, date_str)
 
-        data = await self._request(
-            "/GetQuantitaME/{date}/{market}".format(
-                date=self._handle_date(day), market=market
-            )
-        )
-        return data
-
-    async def get_liquidity(self, day: date | str = None) -> dict:
+    async def get_liquidity(self, day: date | str = None) -> list[dict]:
         """Get liquidity of electricity markets.
 
         Args:
-            day: Get liquidity of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A Python dictionary like: ``[{"data": 20230323,
-                                        "ora": 1,
-                                        "liquidita": 74.4741952239522 },]``
+            A list of dictionaries like: ``[{"data": 20230323,
+                                            "ora": 1,
+                                            "liquidita": 74.47}]``
         """
-
-        data = await self._request(
-            "/GetLiquidita/{date}".format(date=self._handle_date(day))
-        )
-        return data
+        date_str = self._handle_date(day)
+        return await self.request_data(_PLATFORM, "MGP", "ME_Liquidity", date_str, date_str)
 
 
 class MGP(MercatiElettrici):
     """
     Day-ahead Electricity Market.
-    This is a higher level interface over MercatiElettrici for the MGP market and the PUN price.
+    Higher-level interface over MercatiElettrici for the MGP market and the PUN price.
     Hours are in [0 -> 23].
     """
 
@@ -102,15 +79,14 @@ class MGP(MercatiElettrici):
         """Get electricity prices in €/MWh for a specific day and zone.
 
         Args:
-            day: Get prices of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
-            zone: One of ["CALA","CNOR","CSUD","NORD","PUN","SARD","SICI","SUD"].
-                  Default is "PUN" (whole Italy).
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
+            zone: One of ``["CALA","CNOR","CSUD","NORD","PUN","SARD","SICI","SUD"]``.
+                  Default is ``"PUN"`` (whole Italy).
 
         Returns:
-            A Python dictionary like: ``{ hour : price_per_MWh }``
+            A dictionary like: ``{hour: price_per_MWh}``
         """
-
         data = await super().get_prices("MGP", day)
         prices = {record["zona"]: {} for record in data if "zona" in record}
         for record in data:
@@ -122,11 +98,11 @@ class MGP(MercatiElettrici):
         return prices[zone]
 
     async def daily_pun(self, day: date | str = None) -> float:
-        """Get the PUN price for a specific day.
+        """Get the average PUN price for a specific day.
 
         Args:
-            day: Get prices of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
             The PUN price in €/MWh.
@@ -141,15 +117,14 @@ class MGP(MercatiElettrici):
         """Get bought and sold volume for a specific day and zone.
 
         Args:
-            day: Get volumes of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
-            zone: One of ["CALA","CNOR","CSUD","NORD","SARD","SICI","SUD","Totale"].
-                  Default is "Totale" (whole Italy).
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
+            zone: One of ``["CALA","CNOR","CSUD","NORD","SARD","SICI","SUD","Totale"]``.
+                  Default is ``"Totale"`` (whole Italy).
 
         Returns:
-            Two Python dictionaries like: ``{ hour : MWh }``
+            Two dictionaries like: ``{hour: MWh}`` for bought and sold volumes.
         """
-
         data = await super().get_volumes("MGP", day)
         bought = {record["zona"]: {} for record in data if "zona" in record}
         sold = bought.copy()
@@ -166,12 +141,11 @@ class MGP(MercatiElettrici):
         """Get liquidity of electricity markets.
 
         Args:
-            day: Get liquidity of this date. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
+            day: Date to query. Default is today. A string in the format
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A Python dictionary like: ``{hour: liquidity}``.
+            A dictionary like: ``{hour: liquidity}``.
         """
         data = await super().get_liquidity(day)
-        liquidity = {x["ora"] - 1: x["liquidita"] for x in data}
-        return liquidity
+        return {x["ora"] - 1: x["liquidita"] for x in data}

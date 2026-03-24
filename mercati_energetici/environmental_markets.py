@@ -2,27 +2,17 @@
 from __future__ import annotations
 from datetime import date
 
-from .energy_markets import MercatiEnergetici
+from .authenticated_markets import AuthenticatedMercatiEnergetici
+
+_PLATFORM = "PublicMarketResults"
 
 
-class MercatiAmbientali(MercatiEnergetici):
+class MercatiAmbientali(AuthenticatedMercatiEnergetici):
     """
-    Environmental market low level API wrapper.
+    Environmental market API wrapper.
     See [the GME website](https://www.mercatoelettrico.org/En/Mercati/TEE/CosaSonoTee.aspx)
     for an explanation of the markets.
     """
-
-    async def get_markets(self) -> list[dict]:
-        """Get environmental markets.
-
-        Returns:
-            A list of Python dictionaries like: ``[{"data": 20230323,
-                                                  "mercato": "GO",
-                                                  "volumi": 136917 }]``
-        """
-
-        data = await self._request("/GetMercatiAmbientali")
-        return data
 
     async def get_trading_results(
         self, market: str, day: date | str = None
@@ -30,24 +20,12 @@ class MercatiAmbientali(MercatiEnergetici):
         """Get environmental market results.
 
         Args:
-            market: The market to get results from.
+            market: The market segment, e.g. ``"GO"`` or ``"TEE"``.
             day: Date of the market. Default is today. A string in the format
-                    "YYYYMMDD" or a ``datetime.date`` object.
+                    ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A list of Python dictionaries like: ``[{"data": 20230323,
-                                                  "mercato": "GO",
-                                                  "tipologia": "Altro",
-                                                  "periodo": "Altri Mesi 2022",
-                                                  "prezzoRiferimento": 6.833425,
-                                                  "prezzoMinimo": 6.1,
-                                                  "prezzoMassimo": 9,
-                                                  "volumi": 3115 },]``
+            A list of dictionaries with environmental trading results.
         """
-
-        data = await self._request(
-            "/GetEsitiAmbiente/{date}/{market}".format(
-                date=self._handle_date(day), market=market
-            )
-        )
-        return data
+        date_str = self._handle_date(day)
+        return await self.request_data(_PLATFORM, market, "ENV_Results", date_str, date_str)

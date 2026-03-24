@@ -1,4 +1,4 @@
-"""Asynchronous Python client for the GME APP API."""
+"""Asynchronous Python client for the GME authenticated API."""
 
 from .authenticated_markets import AuthenticatedMercatiEnergetici
 from .electricity_markets import MercatiElettrici, MGP
