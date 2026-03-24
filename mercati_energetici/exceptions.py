@@ -15,3 +15,7 @@ class MercatiEnergeticiZoneError(MercatiEnergeticiError):
 
 class MercatiEnergeticiRequestError(MercatiEnergeticiError):
     """GME APP API wrong request input variables."""
+
+
+class MercatiEnergeticiAuthError(MercatiEnergeticiError):
+    """Authentication failed against the GME authenticated API."""
