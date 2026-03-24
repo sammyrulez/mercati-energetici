@@ -37,7 +37,7 @@ The library exposes three low level classes to access the GME API: ``MercatiElet
 ### Installation
 
 ```bash
-pip install mercati-energetici
+pip install git+https://github.com/sammyrulez/mercati-energetici.git
 ```
 
 ### Usage

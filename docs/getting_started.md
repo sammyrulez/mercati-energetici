@@ -32,43 +32,42 @@ This class retrieves the average price of electricity in Italy (PUN) and allows 
 ```python
 async with MGP("myuser", "mypassword") as mgp:
 
-    # Get average PUN price
-    print("PUN avg: ", await mgp.daily_pun(date(2023, 3, 28)))
+    # Average PUN price → float
+    pun: float = await mgp.daily_pun(date(2023, 3, 28))
+    print("PUN avg: ", pun)
 
-    # Get PUN hourly prices
-    print(await mgp.get_prices(date(2023, 3, 28)))
+    # Hourly PUN prices → dict[int, float]
+    prices: dict[int, float] = await mgp.get_prices(date(2023, 3, 28))
+    print(prices)
 
-    # Get hourly volumes
-    print(await mgp.get_volumes(date(2023, 3, 28)))
+    # Hourly bought and sold volumes → tuple[dict[int, float], dict[int, float]]
+    bought, sold = await mgp.get_volumes(date(2023, 3, 28))
+    print(bought, sold)
 
-    # Get market liquidity
-    print(await mgp.get_liquidity('20230328'))
+    # Market liquidity → dict[int, float]
+    liquidity: dict[int, float] = await mgp.get_liquidity("20230328")
+    print(liquidity)
 ```
 
-The last three methods return a dictionary like:
+`get_prices` and `get_liquidity` return a `dict[int, float]` with hours (0–23) as keys:
 
 ```python
-{
-    0: 131.77,
-    1: 120.0,
-    2: 114.63154,
-    3: 102.11652,
-    4: 95.8797,
-    5: 109.69628,
-    6: 132.8,
-    7: 158.1019,
-    8: 167.17296,
-    9: 169.0,
-    ...
-}
+{0: 131.77, 1: 120.0, 2: 114.63, 3: 102.12, ...}
 ```
 
-with hours as keys and the price [EUR/MWh] / volume [MWh] / liquidity [%] as values.
-
-By default, prices and volumes refer to the whole Italy, but it is possible to specify a region (``CALA``, ``CNOR``, ``CSUD``, ``NORD``, ``PUN``, ``SARD``, ``SICI``, ``SUD``):
+`get_volumes` returns a tuple of two `dict[int, float]` — bought and sold volumes in MWh:
 
 ```python
-await mgp.get_prices(date(2023, 3, 28), zone="SUD")
+bought, sold = await mgp.get_volumes(date(2023, 3, 28))
+# bought → {0: 482.2, 1: 391.5, ...}
+# sold   → {0: 1001.6, 1: 887.3, ...}
+```
+
+By default, prices and volumes refer to the whole Italy. To query a specific zone (``CALA``, ``CNOR``, ``CSUD``, ``NORD``, ``SARD``, ``SICI``, ``SUD``):
+
+```python
+prices = await mgp.get_prices(date(2023, 3, 28), zone="SUD")
+bought, sold = await mgp.get_volumes(date(2023, 3, 28), zone="NORD")
 ```
 
 ## MercatiElettrici

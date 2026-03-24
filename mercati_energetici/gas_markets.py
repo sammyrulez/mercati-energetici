@@ -1,6 +1,7 @@
 """Gas Markets"""
 from __future__ import annotations
 from datetime import date
+from typing import Any
 
 from .authenticated_markets import AuthenticatedMercatiEnergetici
 
@@ -15,8 +16,8 @@ class MercatiGas(AuthenticatedMercatiEnergetici):
     """
 
     async def get_continuous_trading_results(
-        self, product: str, day: date | str = None
-    ) -> list[dict]:
+        self, product: str, day: date | str | None = None
+    ) -> list[dict[str, Any]]:
         """Get gas market results on the continuous trading mode.
 
         Args:
@@ -34,8 +35,8 @@ class MercatiGas(AuthenticatedMercatiEnergetici):
         )
 
     async def get_auction_trading_results(
-        self, product: str, day: date | str = None
-    ) -> list[dict]:
+        self, product: str, day: date | str | None = None
+    ) -> list[dict[str, Any]]:
         """Get gas market results on the auction mode.
 
         Args:
@@ -53,8 +54,8 @@ class MercatiGas(AuthenticatedMercatiEnergetici):
         )
 
     async def get_stored_gas_trading_results(
-        self, company: str, day: date | str = None
-    ) -> list[dict]:
+        self, company: str, day: date | str | None = None
+    ) -> list[dict[str, Any]]:
         """Get gas market results for the stored gas.
 
         Args:

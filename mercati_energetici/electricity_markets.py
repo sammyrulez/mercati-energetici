@@ -1,6 +1,7 @@
 """Electricity Markets"""
 from __future__ import annotations
 from datetime import date
+from typing import Any
 
 from .authenticated_markets import AuthenticatedMercatiEnergetici
 from .exceptions import MercatiEnergeticiZoneError
@@ -15,7 +16,7 @@ class MercatiElettrici(AuthenticatedMercatiEnergetici):
     for an explanation of the markets.
     """
 
-    async def get_prices(self, market: str, day: date | str = None) -> list[dict]:
+    async def get_prices(self, market: str, day: date | str | None = None) -> list[dict[str, Any]]:
         """Get electricity prices in €/MWh for a specific day on all the market zones.
 
         Args:
@@ -33,7 +34,7 @@ class MercatiElettrici(AuthenticatedMercatiEnergetici):
         date_str = self._handle_date(day)
         return await self.request_data(_PLATFORM, market, "ME_ZonalPrices", date_str, date_str)
 
-    async def get_volumes(self, market: str, day: date | str = None) -> list[dict]:
+    async def get_volumes(self, market: str, day: date | str | None = None) -> list[dict[str, Any]]:
         """Get bought and sold volume for a specific day on all the market zones.
 
         Args:
@@ -52,7 +53,7 @@ class MercatiElettrici(AuthenticatedMercatiEnergetici):
         date_str = self._handle_date(day)
         return await self.request_data(_PLATFORM, market, "ME_ZonalVolumes", date_str, date_str)
 
-    async def get_liquidity(self, day: date | str = None) -> list[dict]:
+    async def get_liquidity(self, day: date | str | None = None) -> list[dict[str, Any]]:
         """Get liquidity of electricity markets.
 
         Args:
@@ -75,7 +76,7 @@ class MGP(MercatiElettrici):
     Hours are in [0 -> 23].
     """
 
-    async def get_prices(self, day: date | str = None, zone: str = "PUN") -> dict:
+    async def get_prices(self, day: date | str | None = None, zone: str = "PUN") -> dict[int, float]:
         """Get electricity prices in €/MWh for a specific day and zone.
 
         Args:
@@ -85,7 +86,7 @@ class MGP(MercatiElettrici):
                   Default is ``"PUN"`` (whole Italy).
 
         Returns:
-            A dictionary like: ``{hour: price_per_MWh}``
+            A ``dict[int, float]`` mapping hour (0–23) to price in €/MWh.
         """
         data = await super().get_prices("MGP", day)
         prices = {record["zona"]: {} for record in data if "zona" in record}
@@ -97,7 +98,7 @@ class MGP(MercatiElettrici):
             )
         return prices[zone]
 
-    async def daily_pun(self, day: date | str = None) -> float:
+    async def daily_pun(self, day: date | str | None = None) -> float:
         """Get the average PUN price for a specific day.
 
         Args:
@@ -112,8 +113,8 @@ class MGP(MercatiElettrici):
         return sum(hourly_pun) / len(hourly_pun)
 
     async def get_volumes(
-        self, day: date | str = None, zone: str = "Totale"
-    ) -> tuple[dict, dict]:
+        self, day: date | str | None = None, zone: str = "Totale"
+    ) -> tuple[dict[int, float], dict[int, float]]:
         """Get bought and sold volume for a specific day and zone.
 
         Args:
@@ -123,7 +124,8 @@ class MGP(MercatiElettrici):
                   Default is ``"Totale"`` (whole Italy).
 
         Returns:
-            Two dictionaries like: ``{hour: MWh}`` for bought and sold volumes.
+            A tuple ``(bought, sold)`` where each is a ``dict[int, float]``
+            mapping hour (0–23) to volume in MWh.
         """
         data = await super().get_volumes("MGP", day)
         bought = {record["zona"]: {} for record in data if "zona" in record}
@@ -137,7 +139,7 @@ class MGP(MercatiElettrici):
             )
         return bought[zone], sold[zone]
 
-    async def get_liquidity(self, day: date | str = None) -> dict:
+    async def get_liquidity(self, day: date | str | None = None) -> dict[int, float]:
         """Get liquidity of electricity markets.
 
         Args:
@@ -145,7 +147,7 @@ class MGP(MercatiElettrici):
                     ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A dictionary like: ``{hour: liquidity}``.
+            A ``dict[int, float]`` mapping hour (0–23) to liquidity in %.
         """
         data = await super().get_liquidity(day)
         return {x["ora"] - 1: x["liquidita"] for x in data}

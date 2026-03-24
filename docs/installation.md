@@ -1,15 +1,15 @@
 # Installation
 
-The library is available on PyPI:
+Install directly from GitHub:
 
 ```bash
-pip install mercati-energetici
+pip install git+https://github.com/sammyrulez/mercati-energetici.git
 ```
 
 Or with uv:
 
 ```bash
-uv add mercati-energetici
+uv add git+https://github.com/sammyrulez/mercati-energetici.git
 ```
 
 ## Credentials

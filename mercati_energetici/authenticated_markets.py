@@ -91,7 +91,7 @@ class AuthenticatedMercatiEnergetici:
         data_name: str,
         interval_start: str,
         interval_end: str,
-        attributes: dict | None = None,
+        attributes: dict[str, Any] | None = None,
     ) -> Any:
         """Request market data from the /RequestData endpoint.
 

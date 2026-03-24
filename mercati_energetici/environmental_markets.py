@@ -1,6 +1,7 @@
 """Environmental Markets"""
 from __future__ import annotations
 from datetime import date
+from typing import Any
 
 from .authenticated_markets import AuthenticatedMercatiEnergetici
 
@@ -15,8 +16,8 @@ class MercatiAmbientali(AuthenticatedMercatiEnergetici):
     """
 
     async def get_trading_results(
-        self, market: str, day: date | str = None
-    ) -> list[dict]:
+        self, market: str, day: date | str | None = None
+    ) -> list[dict[str, Any]]:
         """Get environmental market results.
 
         Args:
