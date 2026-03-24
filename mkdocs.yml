@@ -1,9 +1,9 @@
 site_name: mercati-energetici
 site_url: https://darcato.github.io/mercati-energetici/
-site_author: Davide Marcato
+site_author: Davide Marcato, Sam Reghenzi
 site_description: Documentation for mercati-energetici python package
 repo_name: darcato/mercati-energetici
-repo_url: https://github.com/darcato/mercati-energetici
+repo_url: https://github.com/sammyrulez/mercati-energetici
 
 theme:
   name: material

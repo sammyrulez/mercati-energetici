@@ -48,3 +48,8 @@ pip install mercati-energetici
 ### Usage
 
 See the [documentation](https://darcato.github.io/mercati-energetici/) for more details.
+
+## Authors
+
+- **Davide Marcato** — original author
+- **Sam Reghenzi** — contributor

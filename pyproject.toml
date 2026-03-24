@@ -3,6 +3,7 @@ name = "mercati-energetici"
 version = "0.1.0"
 description = "Async python client for the Italian energy markets API."
 authors = [{name = "Davide Marcato"}]
+maintainers = [{name = "Sam Reghenzi"}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
