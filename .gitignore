@@ -163,3 +163,4 @@ CLAUDE.md
 .gitignore
 docs/Manuale_Utente_API.pdf
 docs/manuale_tecnico_api.pdf
+.DS_Store
