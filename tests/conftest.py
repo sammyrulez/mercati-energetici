@@ -31,31 +31,31 @@ def error_response(message="Data not found") -> dict:
 # ── Electricity fixtures ──────────────────────────────────────────────────────
 
 _PRICE_ZONES = ["CALA", "CNOR", "CSUD", "NORD", "PUN", "SARD", "SICI", "SUD"]
-_VOLUME_ZONES = ["CALA", "CNOR", "CSUD", "NORD", "SARD", "SICI", "SUD", "Totale"]
+_VOLUME_ZONES = ["CALA", "CNOR", "CSUD", "NORD", "SARD", "SICI", "SUD", "TOTALE"]
 _HOURS = range(1, 25)
 
 
-def make_prices_data(market="MGP", date_val=20230328):
+def make_prices_data(market="MGP", date_val="20230328"):
     return [
-        {"data": date_val, "ora": h, "mercato": market, "zona": z, "prezzo": 100.0 + h}
+        {"FlowDate": str(date_val), "Hour": str(h), "Market": market, "Zone": z, "Price": str(100.0 + h), "Period": "0"}
         for z in _PRICE_ZONES
         for h in _HOURS
     ]
 
 
-def make_volumes_data(market="MGP", date_val=20230328):
+def make_volumes_data(market="MGP", date_val="20230328"):
     return [
         {
-            "data": date_val, "ora": h, "mercato": market, "zona": z,
-            "acquisti": 500.0 + h, "vendite": 1000.0 + h,
+            "FlowDate": str(date_val), "Hour": str(h), "Market": market, "Zone": z,
+            "Purchased": str(500.0 + h), "Sold": str(1000.0 + h), "Period": "0",
         }
         for z in _VOLUME_ZONES
         for h in _HOURS
     ]
 
 
-def make_liquidity_data(date_val=20230328):
-    return [{"data": date_val, "ora": h, "liquidita": 74.47} for h in _HOURS]
+def make_liquidity_data(date_val="20230328"):
+    return [{"FlowDate": str(date_val), "Hour": str(h), "Liquidity": "74.47", "Period": "0"} for h in _HOURS]
 
 
 # ── Gas fixtures ──────────────────────────────────────────────────────────────

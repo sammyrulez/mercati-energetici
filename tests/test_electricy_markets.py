@@ -31,9 +31,9 @@ class TestMercatiElettrici:
                 result = await client.get_prices("MGP", "20230328")
         assert isinstance(result, list)
         assert len(result) == len(data)
-        assert result[0]["mercato"] == "MGP"
-        assert result[0]["data"] == 20230328
-        assert set(result[0].keys()) == {"data", "ora", "mercato", "zona", "prezzo"}
+        assert result[0]["Market"] == "MGP"
+        assert result[0]["FlowDate"] == "20230328"
+        assert set(result[0].keys()) == {"FlowDate", "Hour", "Market", "Zone", "Price", "Period"}
 
     async def test_get_prices_request_error(self):
         with aioresponses() as mock:
@@ -51,8 +51,8 @@ class TestMercatiElettrici:
             async with MercatiElettrici("u", "p") as client:
                 result = await client.get_volumes("MGP", "20230328")
         assert isinstance(result, list)
-        assert result[0]["mercato"] == "MGP"
-        assert set(result[0].keys()) == {"data", "ora", "mercato", "zona", "acquisti", "vendite"}
+        assert result[0]["Market"] == "MGP"
+        assert set(result[0].keys()) == {"FlowDate", "Hour", "Market", "Zone", "Purchased", "Sold", "Period"}
 
     async def test_get_volumes_request_error(self):
         with aioresponses() as mock:
@@ -71,16 +71,16 @@ class TestMercatiElettrici:
                 result = await client.get_liquidity("20230328")
         assert isinstance(result, list)
         assert len(result) == 24
-        assert set(result[0].keys()) == {"data", "ora", "liquidita"}
+        assert set(result[0].keys()) == {"FlowDate", "Hour", "Liquidity", "Period"}
 
     async def test_get_liquidity_default_date(self):
-        data = make_liquidity_data(date_val=int(date.today().strftime("%Y%m%d")))
+        data = make_liquidity_data(date_val=date.today().strftime("%Y%m%d"))
         with aioresponses() as mock:
             mock.post(AUTH_URL, payload=AUTH_OK)
             mock.post(REQUEST_URL, payload=api_response(data))
             async with MercatiElettrici("u", "p") as client:
                 result = await client.get_liquidity()
-        assert result[0]["data"] == int(date.today().strftime("%Y%m%d"))
+        assert result[0]["FlowDate"] == date.today().strftime("%Y%m%d")
 
 
 class TestMGP:
