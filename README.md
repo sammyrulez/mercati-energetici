@@ -4,6 +4,9 @@
 
 # mercati-energetici
 
+[![Tests](https://github.com/sammyrulez/mercati-energetici/actions/workflows/tests.yml/badge.svg)](https://github.com/sammyrulez/mercati-energetici/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/sammyrulez/mercati-energetici/branch/master/graph/badge.svg)](https://codecov.io/gh/sammyrulez/mercati-energetici)
+
 ## Async python library for Italian energy markets
 
 Python async client for the official GME ([Gestore dei Mercati Energetici S.p.A.](https://mercatoelettrico.org/It/Default.aspx)) authenticated API. It allows to retrieve prices and volumes traded on the Italian energy markets (electricity, gas and environmental) in a simple and asynchronous way.
