@@ -67,7 +67,7 @@ By default, prices and volumes refer to the whole Italy. To query a specific zon
 
 ```python
 prices = await mgp.get_prices(date(2023, 3, 28), zone="SUD")
-bought, sold = await mgp.get_volumes(date(2023, 3, 28), zone="NORD")
+bought, sold = await mgp.get_volumes(date(2023, 3, 28), zone="NORD")  # or "TOTALE" for all Italy
 ```
 
 ## MercatiElettrici
@@ -91,10 +91,10 @@ Unlike ``MGP``, these methods return data as delivered by the API, for all zones
 
 ```python
 [
-    {"data": 20230404, "ora": 1, "mercato": "MI-A2", "zona": "CALA", "prezzo": 112.0},
-    {"data": 20230404, "ora": 1, "mercato": "MI-A2", "zona": "CNOR", "prezzo": 112.0},
-    {"data": 20230404, "ora": 1, "mercato": "MI-A2", "zona": "CSUD", "prezzo": 112.0},
-    {"data": 20230404, "ora": 1, "mercato": "MI-A2", "zona": "NORD", "prezzo": 112.0},
+    {"FlowDate": "20230404", "Hour": "1", "Market": "MI-A2", "Zone": "CALA", "Price": "112.0", "Period": "0"},
+    {"FlowDate": "20230404", "Hour": "1", "Market": "MI-A2", "Zone": "CNOR", "Price": "112.0", "Period": "0"},
+    {"FlowDate": "20230404", "Hour": "1", "Market": "MI-A2", "Zone": "CSUD", "Price": "112.0", "Period": "0"},
+    {"FlowDate": "20230404", "Hour": "1", "Market": "MI-A2", "Zone": "NORD", "Price": "112.0", "Period": "0"},
     ...
 ]
 ```

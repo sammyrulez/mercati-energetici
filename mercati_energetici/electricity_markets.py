@@ -25,11 +25,12 @@ class MercatiElettrici(AuthenticatedMercatiEnergetici):
                     ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A list of dictionaries like: ``[{"data": 20230323,
-                                            "ora": 1,
-                                            "mercato": "MGP",
-                                            "zona": "CALA",
-                                            "prezzo": 128.69}]``
+            A list of dictionaries like: ``[{"FlowDate": "20230323",
+                                            "Hour": "1",
+                                            "Market": "MGP",
+                                            "Zone": "CALA",
+                                            "Price": "128.69",
+                                            "Period": "0"}]``
         """
         date_str = self._handle_date(day)
         return await self.request_data(_PLATFORM, market, "ME_ZonalPrices", date_str, date_str)
@@ -43,12 +44,13 @@ class MercatiElettrici(AuthenticatedMercatiEnergetici):
                     ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A list of dictionaries like: ``[{"data": 20230323,
-                                             "ora": 1,
-                                             "mercato": "MGP",
-                                             "zona": "CALA",
-                                             "acquisti": 482.198,
-                                             "vendite": 1001.576}]``
+            A list of dictionaries like: ``[{"FlowDate": "20230323",
+                                             "Hour": "1",
+                                             "Market": "MGP",
+                                             "Zone": "CALA",
+                                             "Purchased": "482.198",
+                                             "Sold": "1001.576",
+                                             "Period": "0"}]``
         """
         date_str = self._handle_date(day)
         return await self.request_data(_PLATFORM, market, "ME_ZonalVolumes", date_str, date_str)
@@ -61,9 +63,10 @@ class MercatiElettrici(AuthenticatedMercatiEnergetici):
                     ``"YYYYMMDD"`` or a ``datetime.date`` object.
 
         Returns:
-            A list of dictionaries like: ``[{"data": 20230323,
-                                            "ora": 1,
-                                            "liquidita": 74.47}]``
+            A list of dictionaries like: ``[{"FlowDate": "20230323",
+                                            "Hour": "1",
+                                            "Liquidity": "74.47",
+                                            "Period": "0"}]``
         """
         date_str = self._handle_date(day)
         return await self.request_data(_PLATFORM, "MGP", "ME_Liquidity", date_str, date_str)
@@ -89,9 +92,9 @@ class MGP(MercatiElettrici):
             A ``dict[int, float]`` mapping hour (0–23) to price in €/MWh.
         """
         data = await super().get_prices("MGP", day)
-        prices = {record["zona"]: {} for record in data if "zona" in record}
+        prices = {record["Zone"]: {} for record in data if "Zone" in record}
         for record in data:
-            prices[record["zona"]][record["ora"] - 1] = record["prezzo"]
+            prices[record["Zone"]][int(record["Hour"]) - 1] = float(record["Price"])
         if zone not in prices.keys():
             raise MercatiEnergeticiZoneError(
                 f"Zone '{zone}' not found. Available zones are: {list(prices.keys())}"
@@ -113,26 +116,26 @@ class MGP(MercatiElettrici):
         return sum(hourly_pun) / len(hourly_pun)
 
     async def get_volumes(
-        self, day: date | str | None = None, zone: str = "Totale"
+        self, day: date | str | None = None, zone: str = "TOTALE"
     ) -> tuple[dict[int, float], dict[int, float]]:
         """Get bought and sold volume for a specific day and zone.
 
         Args:
             day: Date to query. Default is today. A string in the format
                     ``"YYYYMMDD"`` or a ``datetime.date`` object.
-            zone: One of ``["CALA","CNOR","CSUD","NORD","SARD","SICI","SUD","Totale"]``.
-                  Default is ``"Totale"`` (whole Italy).
+            zone: One of ``["CALA","CNOR","CSUD","NORD","SARD","SICI","SUD","TOTALE"]``.
+                  Default is ``"TOTALE"`` (whole Italy).
 
         Returns:
             A tuple ``(bought, sold)`` where each is a ``dict[int, float]``
             mapping hour (0–23) to volume in MWh.
         """
         data = await super().get_volumes("MGP", day)
-        bought = {record["zona"]: {} for record in data if "zona" in record}
-        sold = {zone: {} for zone in bought}
+        bought = {record["Zone"]: {} for record in data if "Zone" in record}
+        sold = {z: {} for z in bought}
         for record in data:
-            bought[record["zona"]][record["ora"] - 1] = record["acquisti"]
-            sold[record["zona"]][record["ora"] - 1] = record["vendite"]
+            bought[record["Zone"]][int(record["Hour"]) - 1] = float(record["Purchased"])
+            sold[record["Zone"]][int(record["Hour"]) - 1] = float(record["Sold"])
         if zone not in bought.keys():
             raise MercatiEnergeticiZoneError(
                 f"Zone '{zone}' not found. Available zones are: {list(bought.keys())}"
@@ -150,4 +153,4 @@ class MGP(MercatiElettrici):
             A ``dict[int, float]`` mapping hour (0–23) to liquidity in %.
         """
         data = await super().get_liquidity(day)
-        return {x["ora"] - 1: x["liquidita"] for x in data}
+        return {int(x["Hour"]) - 1: float(x["Liquidity"]) for x in data}
